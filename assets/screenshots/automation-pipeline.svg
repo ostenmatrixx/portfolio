@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" fill="none">
+  <rect width="1200" height="700" fill="#FFF7ED"/>
+  <rect x="40" y="40" width="1120" height="620" rx="28" fill="#fff" stroke="#E2C9A3"/>
+  <rect x="80" y="90" width="320" height="42" rx="10" fill="#14213D"/>
+  <rect x="80" y="160" width="480" height="22" rx="6" fill="#F77F00" opacity=".75"/>
+  <rect x="80" y="198" width="420" height="22" rx="6" fill="#F77F00" opacity=".55"/>
+  <rect x="80" y="236" width="360" height="22" rx="6" fill="#F77F00" opacity=".35"/>
+  <rect x="640" y="150" width="460" height="150" rx="16" fill="#FFF3E0" stroke="#E2C9A3"/>
+  <rect x="640" y="330" width="460" height="150" rx="16" fill="#FFF3E0" stroke="#E2C9A3"/>
+  <rect x="80" y="320" width="520" height="240" rx="16" fill="#F8FAFC" stroke="#D7C9B7"/>
+  <text x="84" y="610" fill="#334155" font-family="Arial" font-size="30">Automation Workflow Snapshot</text>
+</svg>

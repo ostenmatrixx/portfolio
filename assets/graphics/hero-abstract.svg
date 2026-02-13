@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" fill="none">
+  <rect width="1400" height="900" fill="#111214"/>
+  <g opacity="0.22" stroke="#2A2D34" stroke-width="1">
+    <path d="M0 90H1400"/>
+    <path d="M0 180H1400"/>
+    <path d="M0 270H1400"/>
+    <path d="M0 360H1400"/>
+    <path d="M0 450H1400"/>
+    <path d="M0 540H1400"/>
+    <path d="M0 630H1400"/>
+    <path d="M0 720H1400"/>
+    <path d="M0 810H1400"/>
+    <path d="M140 0V900"/>
+    <path d="M280 0V900"/>
+    <path d="M420 0V900"/>
+    <path d="M560 0V900"/>
+    <path d="M700 0V900"/>
+    <path d="M840 0V900"/>
+    <path d="M980 0V900"/>
+    <path d="M1120 0V900"/>
+    <path d="M1260 0V900"/>
+  </g>
+
+  <g opacity="0.95">
+    <path d="M120 700C240 560 420 520 560 590C670 645 760 650 880 610C980 575 1080 560 1260 640" stroke="#A4B0FF" stroke-width="2"/>
+    <path d="M140 655C260 520 430 485 570 550C680 602 765 610 885 575C985 545 1085 530 1240 595" stroke="#7C8DFF" stroke-width="2"/>
+    <path d="M165 610C285 480 450 445 580 505C685 552 770 565 892 540C995 518 1095 506 1220 555" stroke="#5A70FF" stroke-width="2"/>
+  </g>
+
+  <g opacity="0.95">
+    <circle cx="340" cy="280" r="108" stroke="#B5B9FF" stroke-width="2"/>
+    <circle cx="340" cy="280" r="68" stroke="#7D86FF" stroke-width="2" stroke-dasharray="7 9"/>
+    <circle cx="340" cy="280" r="28" fill="#4C5DFF"/>
+    <circle cx="340" cy="280" r="7" fill="#F8FAFF"/>
+  </g>
+
+  <g opacity="0.9">
+    <path d="M650 170L1120 350L760 560L280 385L650 170Z" fill="url(#poly)" stroke="#3A3F4A"/>
+    <path d="M760 560V725L280 550V385L760 560Z" fill="#1A1E27" stroke="#343846"/>
+    <path d="M1120 350V510L760 725V560L1120 350Z" fill="#161A22" stroke="#2D3140"/>
+  </g>
+
+  <g opacity="0.88">
+    <rect x="930" y="130" width="300" height="44" rx="5" fill="#191C24" stroke="#3C4152"/>
+    <rect x="930" y="192" width="260" height="18" rx="4" fill="#272C39"/>
+    <rect x="930" y="222" width="220" height="18" rx="4" fill="#272C39"/>
+    <rect x="930" y="252" width="180" height="18" rx="4" fill="#272C39"/>
+  </g>
+
+  <g opacity="0.75" fill="#90A0FF">
+    <circle cx="1050" cy="610" r="4"/>
+    <circle cx="1088" cy="632" r="3"/>
+    <circle cx="1128" cy="656" r="4"/>
+    <circle cx="1168" cy="680" r="3"/>
+    <circle cx="1204" cy="702" r="4"/>
+    <circle cx="1240" cy="724" r="3"/>
+  </g>
+
+  <defs>
+    <linearGradient id="poly" x1="280" y1="170" x2="1120" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#222838"/>
+      <stop offset="0.55" stop-color="#2F3B68"/>
+      <stop offset="1" stop-color="#182133"/>
+    </linearGradient>
+  </defs>
+</svg>

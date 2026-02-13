@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSV Cleaner | Austin Gabriel Diaz</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .tool-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .tool-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--line);
+      border-radius: 12px;
+      background: #f4f9ff;
+      padding: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .dropzone strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .dropzone.active {
+      border-color: var(--accent);
+      background: #eaf6ff;
+    }
+
+    .file-input-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      border: 0;
+      clip: rect(0 0 0 0);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-top: 1rem;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: #fff;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .preview-box {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .preview-head {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 340px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 0.45rem 0.55rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f4f9ff;
+      z-index: 1;
+    }
+
+    .muted {
+      color: #475569;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main style="margin-top: 2rem;">
+    <section class="panel tool-grid">
+      <h1>CSV Cleaner</h1>
+      <p class="muted">
+        Upload a CSV. The tool will auto-clean empty rows, normalize headers, trim whitespace,
+        standardize dates to <code>YYYY-MM-DD</code>, convert numeric text to numbers, and remove duplicates.
+      </p>
+
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload CSV">
+        <strong>Drag and drop your CSV here</strong>
+        <span class="muted">or click to browse files</span>
+      </div>
+      <input id="fileInput" class="file-input-hidden" type="file" accept=".csv,text/csv" />
+      <div id="fileName" class="muted">No file selected.</div>
+
+      <div class="tool-actions">
+        <button id="cleanBtn" class="btn btn-primary" type="button">Clean CSV</button>
+        <button id="downloadBtn" class="btn btn-secondary" type="button" disabled>Download Cleaned CSV</button>
+        <a class="btn btn-secondary" href="../index.html#tools">Back to Portfolio</a>
+      </div>
+
+      <div id="status" class="muted"></div>
+
+      <div id="stats" class="stat-grid" hidden></div>
+
+      <div class="preview-grid">
+        <div class="preview-box">
+          <div class="preview-head">Before (First 10 Rows)</div>
+          <div class="table-wrap">
+            <table id="beforeTable"></table>
+          </div>
+        </div>
+        <div class="preview-box">
+          <div class="preview-head">After (First 10 Rows)</div>
+          <div class="table-wrap">
+            <table id="afterTable"></table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const cleanBtn = document.getElementById("cleanBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const statusEl = document.getElementById("status");
+    const dropzone = document.getElementById("dropzone");
+    const fileNameEl = document.getElementById("fileName");
+    const statsEl = document.getElementById("stats");
+    const beforeTable = document.getElementById("beforeTable");
+    const afterTable = document.getElementById("afterTable");
+
+    let cleanedCsvText = "";
+    let lastFileName = "cleaned.csv";
+    let currentFile = null;
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      setSelectedFile(file);
+    });
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("active");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("active");
+      });
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      const file = e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null;
+      setSelectedFile(file);
+    });
+
+    cleanBtn.addEventListener("click", async () => {
+      const file = currentFile || fileInput.files[0];
+      if (!file) {
+        statusEl.textContent = "Select a CSV file first.";
+        return;
+      }
+
+      try {
+        statusEl.textContent = "Cleaning CSV...";
+        const raw = await file.text();
+        const parsed = parseCsv(raw);
+        if (!parsed.length) {
+          statusEl.textContent = "CSV appears empty.";
+          return;
+        }
+
+        const result = cleanCsv(parsed);
+        cleanedCsvText = toCsv(result.headers, result.rows);
+        lastFileName = file.name.replace(/\.csv$/i, "") + ".cleaned.csv";
+
+        renderTable(beforeTable, parsed[0], parsed.slice(1, 11));
+        const afterRowsForPreview = result.rows.slice(0, 10).map((r) => result.headers.map((h) => r[h]));
+        renderTable(afterTable, result.headers, afterRowsForPreview);
+        renderStats(result.stats);
+
+        downloadBtn.disabled = false;
+        statusEl.textContent = "Done. Review the preview and download cleaned CSV.";
+      } catch (err) {
+        statusEl.textContent = "Could not process CSV. Check file format.";
+      }
+    });
+
+    function setSelectedFile(file) {
+      if (!file) {
+        currentFile = null;
+        fileNameEl.textContent = "No file selected.";
+        return;
+      }
+      if (!/\.csv$/i.test(file.name)) {
+        currentFile = null;
+        fileNameEl.textContent = "Invalid file type. Please select a .csv file.";
+        statusEl.textContent = "Invalid file type. Please select a CSV.";
+        return;
+      }
+      currentFile = file;
+      fileNameEl.textContent = `Selected file: ${file.name}`;
+      statusEl.textContent = "";
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      if (!cleanedCsvText) return;
+      const blob = new Blob([cleanedCsvText], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = lastFileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let value = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+
+        if (ch === "\"") {
+          if (inQuotes && next === "\"") {
+            value += "\"";
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === "," && !inQuotes) {
+          row.push(value);
+          value = "";
+        } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
+          if (ch === "\r" && next === "\n") i++;
+          row.push(value);
+          rows.push(row);
+          row = [];
+          value = "";
+        } else {
+          value += ch;
+        }
+      }
+
+      row.push(value);
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      return rows;
+    }
+
+    function cleanCsv(parsed) {
+      const originalHeaders = parsed[0] || [];
+      const data = parsed.slice(1);
+
+      const headers = normalizeHeaders(originalHeaders);
+      const width = headers.length;
+
+      let emptyRowsRemoved = 0;
+      let duplicateRowsRemoved = 0;
+      let trimmedCells = 0;
+      let dateStandardized = 0;
+      let numbersConverted = 0;
+
+      const seen = new Set();
+      const cleanRows = [];
+
+      for (const rawRow of data) {
+        const row = [];
+        for (let i = 0; i < width; i++) {
+          const cell = rawRow[i] ?? "";
+          const trimmed = cell.trim();
+          if (trimmed !== cell) trimmedCells++;
+          row.push(trimmed);
+        }
+
+        const isEmpty = row.every((c) => c === "");
+        if (isEmpty) {
+          emptyRowsRemoved++;
+          continue;
+        }
+
+        const obj = {};
+        for (let i = 0; i < width; i++) {
+          let cell = row[i];
+          const date = toIsoDate(cell);
+          if (date.changed) {
+            cell = date.value;
+            dateStandardized++;
+          } else {
+            const num = normalizeNumeric(cell);
+            if (num.changed) {
+              cell = num.value;
+              numbersConverted++;
+            }
+          }
+          obj[headers[i]] = cell;
+        }
+
+        const key = headers.map((h) => obj[h]).join("\u241F");
+        if (seen.has(key)) {
+          duplicateRowsRemoved++;
+          continue;
+        }
+        seen.add(key);
+        cleanRows.push(obj);
+      }
+
+      return {
+        headers,
+        rows: cleanRows,
+        stats: {
+          inputRows: data.length,
+          outputRows: cleanRows.length,
+          emptyRowsRemoved,
+          duplicateRowsRemoved,
+          trimmedCells,
+          dateStandardized,
+          numbersConverted
+        }
+      };
+    }
+
+    function normalizeHeaders(headers) {
+      const used = new Map();
+      return headers.map((h, i) => {
+        let base = (h || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+        if (!base) base = `column_${i + 1}`;
+        const n = used.get(base) || 0;
+        used.set(base, n + 1);
+        return n ? `${base}_${n + 1}` : base;
+      });
+    }
+
+    function toIsoDate(v) {
+      const s = v.trim();
+      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (!m) return { changed: false, value: v };
+
+      let month = Number(m[1]);
+      let day = Number(m[2]);
+      let year = Number(m[3]);
+      if (year < 100) year += year >= 70 ? 1900 : 2000;
+      if (month < 1 || month > 12 || day < 1 || day > 31) return { changed: false, value: v };
+
+      const iso = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      return { changed: iso !== v, value: iso };
+    }
+
+    function normalizeNumeric(v) {
+      const s = v.trim();
+      if (!s) return { changed: false, value: v };
+      if (!/^-?\d{1,3}(,\d{3})*(\.\d+)?$|^-?\d+(\.\d+)?$/.test(s)) return { changed: false, value: v };
+      const normalized = String(Number(s.replace(/,/g, "")));
+      if (Number.isNaN(Number(normalized))) return { changed: false, value: v };
+      return { changed: normalized !== v, value: normalized };
+    }
+
+    function toCsv(headers, rows) {
+      const lines = [];
+      lines.push(headers.map(escapeCsv).join(","));
+      for (const row of rows) {
+        lines.push(headers.map((h) => escapeCsv(row[h] ?? "")).join(","));
+      }
+      return lines.join("\n");
+    }
+
+    function escapeCsv(v) {
+      const s = String(v);
+      if (/[",\n]/.test(s)) return `"${s.replace(/"/g, "\"\"")}"`;
+      return s;
+    }
+
+    function renderTable(tableEl, headers, rows) {
+      if (!headers || !headers.length) {
+        tableEl.innerHTML = "";
+        return;
+      }
+      let html = "<thead><tr>";
+      for (const h of headers) html += `<th>${escapeHtml(h)}</th>`;
+      html += "</tr></thead><tbody>";
+      for (const row of rows) {
+        html += "<tr>";
+        for (let i = 0; i < headers.length; i++) {
+          html += `<td>${escapeHtml(row[i] ?? "")}</td>`;
+        }
+        html += "</tr>";
+      }
+      html += "</tbody>";
+      tableEl.innerHTML = html;
+    }
+
+    function renderStats(stats) {
+      statsEl.hidden = false;
+      statsEl.innerHTML = [
+        stat("Rows", `${stats.inputRows} -> ${stats.outputRows}`),
+        stat("Empty Rows Removed", stats.emptyRowsRemoved),
+        stat("Duplicate Rows Removed", stats.duplicateRowsRemoved),
+        stat("Trimmed Cells", stats.trimmedCells),
+        stat("Dates Standardized", stats.dateStandardized),
+        stat("Numbers Converted", stats.numbersConverted)
+      ].join("");
+    }
+
+    function stat(label, value) {
+      return `<div class="stat"><div class="muted">${label}</div><div><strong>${escapeHtml(String(value))}</strong></div></div>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
