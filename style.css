@@ -537,11 +537,25 @@ footer {
 .case-study-main {
   width: min(980px, 92vw);
   margin: 2rem auto;
+  display: block;
+  grid-template-columns: none;
+  gap: 0;
+  border: 0;
+  background: transparent;
 }
 
 .case-study-panel {
   border: 1px solid var(--line);
   background: #fcfcfc;
+  padding: 1rem;
+}
+
+.case-study-panel h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .case-kicker {
@@ -580,9 +594,10 @@ footer {
 }
 
 .case-item h2 {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  margin: 0;
 }
 
 .case-item p {
@@ -594,6 +609,10 @@ footer {
 
 .case-links {
   margin-top: 0.95rem;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 @keyframes pulse-bars {
@@ -649,6 +668,11 @@ footer {
 
   .case-grid {
     grid-template-columns: 1fr;
+  }
+
+  .case-links {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
   }
 }
 
